@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ma Grocerie</title>
-    <link rel="manifest" href="./manifest.json">
+    <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#4CAF50">
     <style>
         /* TOUT LE CSS VIENT ICI */
@@ -289,12 +289,13 @@
 
         // Service Worker
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('./sw.js')
+            navigator.serviceWorker.register('sw.js')
                 .then(registration => console.log('SW registered ✅'))
                 .catch(error => console.log('SW registration failed:', error));
         }
     </script>
 </body>
 </html>
+
 
 
