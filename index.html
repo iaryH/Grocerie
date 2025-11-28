@@ -7,7 +7,7 @@
     <link rel="manifest" href="./manifest.json">
     <meta name="theme-color" content="#4CAF50">
     <style>
-        /* [GARDE LE MÊME CSS QUE NOTRE PREMIÈRE VERSION] */
+        /* TOUT LE CSS VIENT ICI */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
         .container { max-width: 400px; margin: 0 auto; background: white; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); overflow: hidden; }
@@ -24,33 +24,10 @@
         .form-group input:focus { border-color: #4CAF50; outline: none; }
         .btn-close { background: #666; margin-top: 10px; }
         .notification { position: fixed; top: 20px; right: 20px; padding: 15px 20px; background: #4CAF50; color: white; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); display: none; z-index: 1001; }
-        
-        /* Styles pour l'autocomplétion */
-        .suggestions {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: white;
-            border: 1px solid #ddd;
-            border-top: none;
-            border-radius: 0 0 8px 8px;
-            max-height: 150px;
-            overflow-y: auto;
-            z-index: 1000;
-            display: none;
-        }
-        .suggestion-item {
-            padding: 10px;
-            cursor: pointer;
-            border-bottom: 1px solid #f0f0f0;
-        }
-        .suggestion-item:hover {
-            background: #f5f5f5;
-        }
-        .suggestion-item:last-child {
-            border-bottom: none;
-        }
+        .suggestions { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #ddd; border-top: none; border-radius: 0 0 8px 8px; max-height: 150px; overflow-y: auto; z-index: 1000; display: none; }
+        .suggestion-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #f0f0f0; }
+        .suggestion-item:hover { background: #f5f5f5; }
+        .suggestion-item:last-child { border-bottom: none; }
     </style>
 </head>
 <body>
@@ -110,7 +87,7 @@
         // 🔥 CONFIGURATION SUPABASE - REMPLACE AVEC TES INFOS
         const SUPABASE_URL = 'https://jiojxzblxgil1jzfauof.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imppb2p4emJseHFpbGxqemZhdW9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3MjQ4MjAsImV4cCI6MjA3OTMwMDgyMH0._xroT6Ed1EZobjqDm8s5BwNSOxYRdRVG1EHYH2DzX6Q';
-        
+
         const headers = {
             'apikey': SUPABASE_KEY,
             'Authorization': `Bearer ${SUPABASE_KEY}`,
@@ -130,6 +107,8 @@
         // Charger clients et produits pour l'autocomplétion
         async function chargerDonneesAutocompletion() {
             try {
+                console.log('🔄 Chargement des données...');
+                
                 // Charger clients
                 const reponseClients = await fetch(`${SUPABASE_URL}/rest/v1/clients?select=nom&order=nom`, { headers });
                 clientsList = await reponseClients.json();
@@ -138,9 +117,13 @@
                 const reponseProduits = await fetch(`${SUPABASE_URL}/rest/v1/produits?select=nom,prix&order=nom`, { headers });
                 produitsList = await reponseProduits.json();
                 
-                console.log('✅ Données autocomplétion chargées');
+                console.log('✅ Autocomplétion chargée:', {
+                    clients: clientsList.length,
+                    produits: produitsList.length
+                });
             } catch (error) {
                 console.error('❌ Erreur chargement autocomplétion:', error);
+                afficherNotification('Vérifie ta connexion et tes clés Supabase', 'error');
             }
         }
 
@@ -201,7 +184,7 @@
             document.getElementById('produit-suggestions').style.display = 'none';
         }
 
-        // FONCTIONS PRINCIPALES (identique à notre première version)
+        // FONCTIONS PRINCIPALES
         function ouvrirNouvelleVente() {
             document.getElementById('modalVente').style.display = 'block';
         }
@@ -244,37 +227,12 @@
                     document.getElementById('produit').value = '';
                     document.getElementById('quantite').value = '1';
                     fermerModal('modalVente');
-                    
-                    // Recréer automatiquement le client/produit si nouveau
-                    await creerSiNouveau(client, 'clients');
-                    await creerSiNouveau(produit, 'produits');
-                    
-                    // Recharger l'autocomplétion
-                    chargerDonneesAutocompletion();
                 } else {
-                    throw new Error('Erreur API');
+                    throw new Error('Erreur API: ' + response.status);
                 }
             } catch (error) {
+                console.error('💥 Erreur:', error);
                 afficherNotification('Erreur: ' + error.message, 'error');
-            }
-        }
-
-        async function creerSiNouveau(nom, table) {
-            const liste = table === 'clients' ? clientsList : produitsList;
-            const existeDeja = liste.some(item => item.nom.toLowerCase() === nom.toLowerCase());
-            
-            if (!existeDeja) {
-                try {
-                    const data = table === 'clients' ? { nom: nom.trim() } : { nom: nom.trim(), prix: 0 };
-                    await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
-                        method: 'POST',
-                        headers: headers,
-                        body: JSON.stringify(data)
-                    });
-                    console.log(`✅ Nouveau ${table.slice(0, -1)} créé:`, nom);
-                } catch (error) {
-                    console.error(`❌ Erreur création ${table}:`, error);
-                }
             }
         }
 
