@@ -28,6 +28,66 @@
         .suggestion-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #f0f0f0; }
         .suggestion-item:hover { background: #f5f5f5; }
         .suggestion-item:last-child { border-bottom: none; }
+        /* Styles pour les statistiques */
+.stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.stat-card {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 10px;
+    text-align: center;
+    border: 2px solid #e9ecef;
+}
+
+.stat-value {
+    font-size: 18px;
+    font-weight: bold;
+    color: #4CAF50;
+    margin-bottom: 5px;
+}
+
+.stat-label {
+    font-size: 12px;
+    color: #666;
+}
+
+.graph-bar {
+    display: flex;
+    align-items: center;
+    margin: 8px 0;
+    font-size: 14px;
+}
+
+.graph-bar-label {
+    width: 80px;
+    text-align: right;
+    padding-right: 10px;
+}
+
+.graph-bar-container {
+    flex: 1;
+    background: #e9ecef;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.graph-bar-fill {
+    height: 20px;
+    background: linear-gradient(90deg, #4CAF50, #45a049);
+    transition: width 0.5s ease;
+}
+
+.graph-bar-value {
+    width: 50px;
+    text-align: right;
+    padding-left: 10px;
+    font-weight: bold;
+}
     </style>
 </head>
 <body>
@@ -83,6 +143,59 @@
         </div>
     </div>
 
+<!-- Modal Statistiques -->
+<div class="modal" id="modalStats">
+    <div class="modal-content">
+        <h3 style="margin-bottom: 20px;">📈 Statistiques</h3>
+        
+        <div class="stats-grid">
+            <!-- Chiffre d'affaires -->
+            <div class="stat-card">
+                <div class="stat-value" id="ca-total">0€</div>
+                <div class="stat-label">Chiffre d'affaires</div>
+            </div>
+            
+            <!-- Ventes totales -->
+            <div class="stat-card">
+                <div class="stat-value" id="ventes-total">0</div>
+                <div class="stat-label">Ventes totales</div>
+            </div>
+            
+            <!-- Produit le plus vendu -->
+            <div class="stat-card">
+                <div class="stat-value" id="top-produit">-</div>
+                <div class="stat-label">Produit populaire</div>
+            </div>
+            
+            <!-- Client régulier -->
+            <div class="stat-card">
+                <div class="stat-value" id="top-client">-</div>
+                <div class="stat-label">Client fidèle</div>
+            </div>
+        </div>
+
+        <!-- Graphique des ventes par jour -->
+        <div style="margin-top: 20px;">
+            <h4>📅 Ventes des 7 derniers jours</h4>
+            <div id="graphique-ventes" style="height: 200px; margin: 15px 0;">
+                <!-- Le graphique sera généré ici -->
+            </div>
+        </div>
+
+        <!-- Top produits -->
+        <div style="margin-top: 20px;">
+            <h4>🏆 Top 5 produits</h4>
+            <div id="top-produits-list" style="max-height: 200px; overflow-y: auto;">
+                <!-- Liste des top produits -->
+            </div>
+        </div>
+
+        <button class="btn btn-close" onclick="fermerModal('modalStats')" style="margin-top: 20px;">
+            Fermer
+        </button>
+    </div>
+</div>
+    
     <script>
         // 🔥 CONFIGURATION SUPABASE - REMPLACE AVEC TES INFOS
         const SUPABASE_URL = 'https://jiojxzblxqilljzfauof.supabase.co';
@@ -265,9 +378,181 @@
             afficherNotification('Fonctionnalité à venir !');
         }
 
-        function voirStats() {
-            afficherNotification('Statistiques à venir !');
+        // Fonction pour ouvrir les statistiques
+function voirStats() {
+    chargerStatistiques();
+    document.getElementById('modalStats').style.display = 'block';
+}
+
+// Fonction pour charger les statistiques
+async function chargerStatistiques() {
+    try {
+        console.log('📈 Chargement des statistiques...');
+        
+        // 1. Charger toutes les ventes
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/ventes?select=*,produits(nom,prix),clients(nom)&order=date_vente.desc`, { 
+            headers: headers 
+        });
+        const ventes = await response.json();
+        
+        // 2. Calculer les statistiques
+        calculerStats(ventes);
+        
+    } catch (error) {
+        console.error('❌ Erreur chargement stats:', error);
+        afficherNotification('Erreur chargement statistiques', 'error');
+    }
+}
+
+// Fonction pour calculer les statistiques
+function calculerStats(ventes) {
+    if (ventes.length === 0) {
+        afficherStatsVides();
+        return;
+    }
+
+    // Calcul du chiffre d'affaires total
+    const caTotal = ventes.reduce((total, vente) => {
+        const prix = vente.produits?.prix || 0;
+        return total + (prix * vente.quantite);
+    }, 0);
+
+    // Nombre total de ventes
+    const totalVentes = ventes.length;
+
+    // Produit le plus vendu
+    const produitsCount = {};
+    ventes.forEach(vente => {
+        const nomProduit = vente.produits?.nom || vente.produit;
+        produitsCount[nomProduit] = (produitsCount[nomProduit] || 0) + vente.quantite;
+    });
+    const topProduit = Object.entries(produitsCount).sort((a, b) => b[1] - a[1])[0];
+
+    // Client le plus fidèle
+    const clientsCount = {};
+    ventes.forEach(vente => {
+        const nomClient = vente.clients?.nom || vente.client;
+        clientsCount[nomClient] = (clientsCount[nomClient] || 0) + 1;
+    });
+    const topClient = Object.entries(clientsCount).sort((a, b) => b[1] - a[1])[0];
+
+    // Ventes par jour (7 derniers jours)
+    const ventesParJour = calculerVentesParJour(ventes);
+
+    // Afficher les statistiques
+    afficherStats({
+        caTotal,
+        totalVentes,
+        topProduit: topProduit ? `${topProduit[0]} (${topProduit[1]}x)` : '-',
+        topClient: topClient ? `${topClient[0]} (${topClient[1]} achats)` : '-',
+        ventesParJour,
+        topProduits: Object.entries(produitsCount).sort((a, b) => b[1] - a[1]).slice(0, 5)
+    });
+}
+
+// Calculer les ventes des 7 derniers jours
+function calculerVentesParJour(ventes) {
+    const jours = {};
+    const aujourdHui = new Date();
+    
+    // Initialiser les 7 derniers jours
+    for (let i = 6; i >= 0; i--) {
+        const date = new Date(aujourdHui);
+        date.setDate(date.getDate() - i);
+        const dateStr = date.toISOString().split('T')[0];
+        jours[dateStr] = 0;
+    }
+
+    // Compter les ventes par jour
+    ventes.forEach(vente => {
+        const dateVente = new Date(vente.date_vente).toISOString().split('T')[0];
+        if (jours[dateVente] !== undefined) {
+            jours[dateVente] += vente.quantite;
         }
+    });
+
+    return jours;
+}
+
+// Afficher les statistiques
+function afficherStats(stats) {
+    // Chiffre d'affaires
+    document.getElementById('ca-total').textContent = `${stats.caTotal.toFixed(2)}€`;
+    
+    // Total ventes
+    document.getElementById('ventes-total').textContent = stats.totalVentes;
+    
+    // Top produit
+    document.getElementById('top-produit').textContent = stats.topProduit;
+    
+    // Top client
+    document.getElementById('top-client').textContent = stats.topClient;
+    
+    // Graphique des ventes
+    afficherGraphiqueVentes(stats.ventesParJour);
+    
+    // Top produits
+    afficherTopProduits(stats.topProduits);
+}
+
+// Afficher le graphique des ventes
+function afficherGraphiqueVentes(ventesParJour) {
+    const container = document.getElementById('graphique-ventes');
+    const maxVentes = Math.max(...Object.values(ventesParJour));
+    
+    container.innerHTML = Object.entries(ventesParJour)
+        .map(([date, quantite]) => {
+            const pourcentage = maxVentes > 0 ? (quantite / maxVentes) * 100 : 0;
+            const dateFormatee = new Date(date).toLocaleDateString('fr-FR', { 
+                weekday: 'short', 
+                day: 'numeric' 
+            });
+            
+            return `
+                <div class="graph-bar">
+                    <div class="graph-bar-label">${dateFormatee}</div>
+                    <div class="graph-bar-container">
+                        <div class="graph-bar-fill" style="width: ${pourcentage}%"></div>
+                    </div>
+                    <div class="graph-bar-value">${quantite}</div>
+                </div>
+            `;
+        })
+        .join('');
+}
+
+// Afficher le top des produits
+function afficherTopProduits(topProduits) {
+    const container = document.getElementById('top-produits-list');
+    
+    if (topProduits.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: #666;">Aucune donnée</p>';
+        return;
+    }
+    
+    container.innerHTML = topProduits
+        .map(([nom, quantite], index) => `
+            <div style="padding: 8px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between;">
+                <span>${index + 1}. ${nom}</span>
+                <span style="color: #4CAF50; font-weight: bold;">${quantite}</span>
+            </div>
+        `)
+        .join('');
+}
+
+// Afficher des stats vides
+function afficherStatsVides() {
+    document.getElementById('ca-total').textContent = '0€';
+    document.getElementById('ventes-total').textContent = '0';
+    document.getElementById('top-produit').textContent = '-';
+    document.getElementById('top-client').textContent = '-';
+    
+    document.getElementById('graphique-ventes').innerHTML = 
+        '<p style="text-align: center; color: #666;">Aucune vente cette semaine</p>';
+    
+    document.getElementById('top-produits-list').innerHTML = 
+        '<p style="text-align: center; color: #666;">Aucun produit vendu</p>';
+}
 
         function afficherNotification(message, type = 'success') {
             const notif = document.getElementById('notification');
@@ -317,6 +602,7 @@
     </script>
 </body>
 </html>
+
 
 
 
