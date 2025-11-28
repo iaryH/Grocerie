@@ -1,15 +1,25 @@
-// Service Worker qui ne fait absolument rien
+const CACHE_NAME = 'ma-grocerie-v2';
+const urlsToCache = [
+  './',
+  './index.html'
+];
+
 self.addEventListener('install', function(event) {
-    console.log('Service Worker installé - mode pass-through');
-    self.skipWaiting();
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(function(cache) {
+        console.log('📦 Fichiers mis en cache');
+        return cache.addAll(urlsToCache);
+      })
+  );
 });
 
-self.addEventListener('activate', function(event) {
-    event.waitUntil(self.clients.claim());
-});
-
-// Ne pas intercepter les requêtes - tout passe directement
 self.addEventListener('fetch', function(event) {
-    // Laisser toutes les requêtes passer sans interception
-    return;
+  event.respondWith(
+    caches.match(event.request)
+      .then(function(response) {
+        // Retourne le cache ou fetch
+        return response || fetch(event.request);
+      })
+  );
 });
