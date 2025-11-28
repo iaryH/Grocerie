@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ma Grocerie</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4CAF50">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: #4CAF50;
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .menu {
+            padding: 20px;
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            text-decoration: none;
+            color: white;
+        }
+
+        .btn-primary { background: #4CAF50; }
+        .btn-secondary { background: #2196F3; }
+        .btn-warning { background: #FF9800; }
+        .btn-danger { background: #f44336; }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            padding: 15px;
+            background: #f8f9fa;
+            margin: 10px 0;
+            border-radius: 10px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 10px;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 400px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .form-group input:focus {
+            border-color: #4CAF50;
+            outline: none;
+        }
+
+        .btn-close {
+            background: #666;
+            margin-top: 10px;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            background: #4CAF50;
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            display: none;
+            z-index: 1001;
+        }
+    </style>
+</head>
+<body>
+    <div class="notification" id="notification"></div>
+
+    <div class="container">
+        <div class="header">
+            <h1>🏪 Ma Grocerie</h1>
+            <p>Gestion des ventes simplifiée</p>
+        </div>
+
+        <div class="menu">
+            <button class="btn btn-primary" onclick="ouvrirNouvelleVente()">
+                💰 Nouvelle Vente
+            </button>
+            
+            <button class="btn btn-secondary" onclick="afficherVentes()">
+                📊 Ventes Récentes
+            </button>
+            
+            <button class="btn btn-warning" onclick="gererProduits()">
+                📦 Gérer Produits
+            </button>
+            
+            <button class="btn btn-danger" onclick="voirStats()">
+                📈 Statistiques
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal Nouvelle Vente -->
+    <div class="modal" id="modalVente">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 20px;">💰 Nouvelle Vente</h3>
+            
+            <div class="form-group">
+                <label for="client">Client:</label>
+                <input type="text" id="client" placeholder="Nom du client">
+            </div>
+            
+            <div class="form-group">
+                <label for="produit">Produit:</label>
+                <input type="text" id="produit" placeholder="Nom du produit">
+            </div>
+            
+            <div class="form-group">
+                <label for="quantite">Quantité:</label>
+                <input type="number" id="quantite" value="1" min="1">
+            </div>
+            
+            <button class="btn btn-primary" onclick="enregistrerVente()">
+                ✅ Enregistrer
+            </button>
+            <button class="btn btn-close" onclick="fermerModal('modalVente')">
+                ❌ Annuler
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal Ventes Récentes -->
+    <div class="modal" id="modalVentes">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 15px;">📊 Ventes Récentes</h3>
+            <div id="listeVentes" style="max-height: 300px; overflow-y: auto;">
+                <!-- Les ventes apparaîtront ici -->
+            </div>
+            <button class="btn btn-close" onclick="fermerModal('modalVentes')" style="margin-top: 15px;">
+                Fermer
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // 🔑 REMPLACE AVEC TES INFOS SUPABASE
+        const SUPABASE_URL = '"https://jiojxzblxqilljzfauof.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imppb2p4emJseHFpbGxqemZhdW9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3MjQ4MjAsImV4cCI6MjA3OTMwMDgyMH0._xroT6Ed1EZobjqDm8s5BwNSOxYRdRVG1EHYH2DzX6Q';
+        
+
+        const headers = {
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Content-Type': 'application/json'
+        };
+
+        // Fonctions modales
+        function ouvrirNouvelleVente() {
+            document.getElementById('modalVente').style.display = 'block';
+        }
+
+        function afficherVentes() {
+            chargerVentesRecentes();
+            document.getElementById('modalVentes').style.display = 'block';
+        }
+
+        function fermerModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        function afficherNotification(message, type = 'success') {
+            const notif = document.getElementById('notification');
+            notif.textContent = message;
+            notif.style.background = type === 'success' ? '#4CAF50' : '#f44336';
+            notif.style.display = 'block';
+            
+            setTimeout(() => {
+                notif.style.display = 'none';
+            }, 3000);
+        }
+
+        // Fonctions Supabase
+        async function enregistrerVente() {
+            const client = document.getElementById('client').value;
+            const produit = document.getElementById('produit').value;
+            const quantite = document.getElementById('quantite').value;
+
+            if (!client || !produit) {
+                afficherNotification('Veuillez remplir tous les champs', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/ventes`, {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify({
+                        client: client.trim(),
+                        produit: produit.trim(),
+                        quantite: parseInt(quantite)
+                    })
+                });
+
+                if (response.ok) {
+                    afficherNotification('Vente enregistrée avec succès !');
+                    // Réinitialiser le formulaire
+                    document.getElementById('client').value = '';
+                    document.getElementById('produit').value = '';
+                    document.getElementById('quantite').value = '1';
+                    fermerModal('modalVente');
+                } else {
+                    throw new Error('Erreur API');
+                }
+            } catch (error) {
+                afficherNotification('Erreur: ' + error.message, 'error');
+            }
+        }
+
+        async function chargerVentesRecentes() {
+            try {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/ventes?order=id.desc&limit=10`, {
+                    headers: headers
+                });
+                
+                const ventes = await response.json();
+                const liste = document.getElementById('listeVentes');
+                
+                if (ventes.length === 0) {
+                    liste.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">Aucune vente enregistrée</p>';
+                    return;
+                }
+
+                liste.innerHTML = ventes.map(vente => `
+                    <div style="padding: 10px; border-bottom: 1px solid #eee;">
+                        <strong>${vente.client}</strong> - ${vente.produit} 
+                        <span style="color: #4CAF50; float: right;">x${vente.quantite}</span>
+                        <br>
+                        <small style="color: #888;">${new Date(vente.created_at).toLocaleDateString()}</small>
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                document.getElementById('listeVentes').innerHTML = 
+                    '<p style="color: red; text-align: center;">Erreur de chargement</p>';
+            }
+        }
+
+        function gererProduits() {
+            afficherNotification('Fonctionnalité à venir !');
+        }
+
+        function voirStats() {
+            afficherNotification('Statistiques à venir !');
+        }
+
+        // Fermer les modales en cliquant à l'extérieur
+        window.onclick = function(event) {
+            const modals = document.getElementsByClassName('modal');
+            for (let modal of modals) {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            }
+        }
+
+        // Service Worker pour PWA
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js')
+                .then(registration => console.log('SW registered'))
+                .catch(error => console.log('SW registration failed'));
+        }
+    </script>
+</body>
+</html>
