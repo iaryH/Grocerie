@@ -2,7 +2,7 @@
     "name": "Ma Grocerie",
     "short_name": "Grocerie",
     "description": "Application de gestion pour ma petite grocerie",
-    "start_url": "/",
+    "start_url": "./",
     "display": "standalone",
     "background_color": "#ffffff",
     "theme_color": "#4CAF50",
@@ -20,3 +20,4 @@
         }
     ]
 }
+
