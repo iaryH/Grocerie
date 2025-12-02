@@ -151,7 +151,7 @@
         <div class="stats-grid">
             <!-- Chiffre d'affaires -->
             <div class="stat-card">
-                <div class="stat-value" id="ca-total">0€</div>
+                <div class="stat-value" id="ca-total">0Ar</div>
                 <div class="stat-label">Chiffre d'affaires</div>
             </div>
             
@@ -279,7 +279,7 @@
                 suggestions.forEach(item => {
                     const div = document.createElement('div');
                     div.className = 'suggestion-item';
-                    div.textContent = type === 'produit' ? `${item.nom} - ${item.prix}€` : item.nom;
+                    div.textContent = type === 'produit' ? `${item.nom} - ${item.prix}Ar` : item.nom;
                     div.onclick = () => {
                         document.getElementById(type).value = item.nom;
                         suggestionsDiv.style.display = 'none';
@@ -477,7 +477,7 @@ function calculerVentesParJour(ventes) {
 // Afficher les statistiques
 function afficherStats(stats) {
     // Chiffre d'affaires
-    document.getElementById('ca-total').textContent = `${stats.caTotal.toFixed(2)}€`;
+    document.getElementById('ca-total').textContent = `${stats.caTotal.toFixed(2)}Ar`;
     
     // Total ventes
     document.getElementById('ventes-total').textContent = stats.totalVentes;
@@ -542,7 +542,7 @@ function afficherTopProduits(topProduits) {
 
 // Afficher des stats vides
 function afficherStatsVides() {
-    document.getElementById('ca-total').textContent = '0€';
+    document.getElementById('ca-total').textContent = '0Ar';
     document.getElementById('ventes-total').textContent = '0';
     document.getElementById('top-produit').textContent = '-';
     document.getElementById('top-client').textContent = '-';
@@ -602,6 +602,7 @@ function afficherStatsVides() {
     </script>
 </body>
 </html>
+
 
 
 
