@@ -379,83 +379,123 @@
         }
 
         // Fonction pour ouvrir les statistiques
-function voirStats() {
-    chargerStatistiques();
+// ============================================
+// FONCTIONS STATISTIQUES (NOUVELLES)
+// ============================================
+
+// Fonction pour ouvrir les statistiques
+function afficherStatsPage() {
+    chargerStats();
     document.getElementById('modalStats').style.display = 'block';
 }
 
 // Fonction pour charger les statistiques
-async function chargerStatistiques() {
+async function chargerStats() {
     try {
         console.log('📈 Chargement des statistiques...');
         
-        // 1. Charger toutes les ventes
-        const response = await fetch(`${SUPABASE_URL}/rest/v1/ventes?select=*,produits(nom,prix),clients(nom)&order=date_vente.desc`, { 
+        // 1. Charger les ventes
+        const responseVentes = await fetch(`${SUPABASE_URL}/rest/v1/ventes?select=client,produit,quantite,date_vente&order=date_vente.desc`, { 
             headers: headers 
         });
-        const ventes = await response.json();
         
-        // 2. Calculer les statistiques
-        calculerStats(ventes);
+        if (!responseVentes.ok) {
+            throw new Error(`Erreur ventes: ${responseVentes.status}`);
+        }
+        
+        const ventes = await responseVentes.json();
+        
+        // 2. Charger les produits pour les prix
+        const responseProduits = await fetch(`${SUPABASE_URL}/rest/v1/produits?select=nom,prix`, { 
+            headers: headers 
+        });
+        const produits = await responseProduits.json();
+        
+        // 3. Calculer les statistiques
+        calculerStatsNouveau(ventes, produits);
         
     } catch (error) {
         console.error('❌ Erreur chargement stats:', error);
-        afficherNotification('Erreur chargement statistiques', 'error');
+        afficherNotification('Erreur: ' + error.message, 'error');
     }
 }
 
 // Fonction pour calculer les statistiques
-function calculerStats(ventes) {
+function calculerStatsNouveau(ventes, produits) {
     if (ventes.length === 0) {
         afficherStatsVides();
         return;
     }
 
-    // Calcul du chiffre d'affaires total
+    // Map des prix
+    const prixProduits = {};
+    produits.forEach(prod => {
+        prixProduits[prod.nom] = prod.prix || 0;
+    });
+
+    // CA total
     const caTotal = ventes.reduce((total, vente) => {
-        const prix = vente.produits?.prix || 0;
+        const prix = prixProduits[vente.produit] || 0;
         return total + (prix * vente.quantite);
     }, 0);
 
-    // Nombre total de ventes
+    // Ventes totales
     const totalVentes = ventes.length;
 
     // Produit le plus vendu
     const produitsCount = {};
     ventes.forEach(vente => {
-        const nomProduit = vente.produits?.nom || vente.produit;
-        produitsCount[nomProduit] = (produitsCount[nomProduit] || 0) + vente.quantite;
+        produitsCount[vente.produit] = (produitsCount[vente.produit] || 0) + vente.quantite;
     });
     const topProduit = Object.entries(produitsCount).sort((a, b) => b[1] - a[1])[0];
 
     // Client le plus fidèle
     const clientsCount = {};
     ventes.forEach(vente => {
-        const nomClient = vente.clients?.nom || vente.client;
-        clientsCount[nomClient] = (clientsCount[nomClient] || 0) + 1;
+        clientsCount[vente.client] = (clientsCount[vente.client] || 0) + 1;
     });
     const topClient = Object.entries(clientsCount).sort((a, b) => b[1] - a[1])[0];
 
-    // Ventes par jour (7 derniers jours)
+    // Ventes par jour
     const ventesParJour = calculerVentesParJour(ventes);
 
-    // Afficher les statistiques
-    afficherStats({
+    // Top produits
+    const topProduitsAvecCA = Object.entries(produitsCount)
+        .map(([nom, quantite]) => ({
+            nom,
+            quantite,
+            ca: (prixProduits[nom] || 0) * quantite
+        }))
+        .sort((a, b) => b.quantite - a.quantite)
+        .slice(0, 5);
+
+    // Afficher
+    afficherStatsComplet({
         caTotal,
         totalVentes,
         topProduit: topProduit ? `${topProduit[0]} (${topProduit[1]}x)` : '-',
         topClient: topClient ? `${topClient[0]} (${topClient[1]} achats)` : '-',
         ventesParJour,
-        topProduits: Object.entries(produitsCount).sort((a, b) => b[1] - a[1]).slice(0, 5)
+        topProduits: topProduitsAvecCA
     });
 }
 
-// Calculer les ventes des 7 derniers jours
+// Afficher les statistiques complètes
+function afficherStatsComplet(stats) {
+    document.getElementById('ca-total').textContent = `${stats.caTotal.toFixed(2)}€`;
+    document.getElementById('ventes-total').textContent = stats.totalVentes;
+    document.getElementById('top-produit').textContent = stats.topProduit;
+    document.getElementById('top-client').textContent = stats.topClient;
+    
+    afficherGraphiqueVentes(stats.ventesParJour);
+    afficherTopProduits(stats.topProduits);
+}
+
+// Fonctions auxiliaires (garder les mêmes)
 function calculerVentesParJour(ventes) {
     const jours = {};
     const aujourdHui = new Date();
     
-    // Initialiser les 7 derniers jours
     for (let i = 6; i >= 0; i--) {
         const date = new Date(aujourdHui);
         date.setDate(date.getDate() - i);
@@ -463,7 +503,6 @@ function calculerVentesParJour(ventes) {
         jours[dateStr] = 0;
     }
 
-    // Compter les ventes par jour
     ventes.forEach(vente => {
         const dateVente = new Date(vente.date_vente).toISOString().split('T')[0];
         if (jours[dateVente] !== undefined) {
@@ -474,28 +513,6 @@ function calculerVentesParJour(ventes) {
     return jours;
 }
 
-// Afficher les statistiques
-function afficherStats(stats) {
-    // Chiffre d'affaires
-    document.getElementById('ca-total').textContent = `${stats.caTotal.toFixed(2)}Ar`;
-    
-    // Total ventes
-    document.getElementById('ventes-total').textContent = stats.totalVentes;
-    
-    // Top produit
-    document.getElementById('top-produit').textContent = stats.topProduit;
-    
-    // Top client
-    document.getElementById('top-client').textContent = stats.topClient;
-    
-    // Graphique des ventes
-    afficherGraphiqueVentes(stats.ventesParJour);
-    
-    // Top produits
-    afficherTopProduits(stats.topProduits);
-}
-
-// Afficher le graphique des ventes
 function afficherGraphiqueVentes(ventesParJour) {
     const container = document.getElementById('graphique-ventes');
     const maxVentes = Math.max(...Object.values(ventesParJour));
@@ -521,7 +538,6 @@ function afficherGraphiqueVentes(ventesParJour) {
         .join('');
 }
 
-// Afficher le top des produits
 function afficherTopProduits(topProduits) {
     const container = document.getElementById('top-produits-list');
     
@@ -531,18 +547,22 @@ function afficherTopProduits(topProduits) {
     }
     
     container.innerHTML = topProduits
-        .map(([nom, quantite], index) => `
-            <div style="padding: 8px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between;">
-                <span>${index + 1}. ${nom}</span>
-                <span style="color: #4CAF50; font-weight: bold;">${quantite}</span>
+        .map((produit, index) => `
+            <div style="padding: 8px; border-bottom: 1px solid #eee;">
+                <div style="display: flex; justify-content: space-between;">
+                    <span><strong>${index + 1}. ${produit.nom}</strong></span>
+                    <span style="color: #4CAF50; font-weight: bold;">${produit.quantite}</span>
+                </div>
+                <div style="font-size: 12px; color: #666; text-align: right;">
+                    CA: ${produit.ca.toFixed(2)}€
+                </div>
             </div>
         `)
         .join('');
 }
 
-// Afficher des stats vides
 function afficherStatsVides() {
-    document.getElementById('ca-total').textContent = '0Ar';
+    document.getElementById('ca-total').textContent = '0€';
     document.getElementById('ventes-total').textContent = '0';
     document.getElementById('top-produit').textContent = '-';
     document.getElementById('top-client').textContent = '-';
@@ -553,7 +573,6 @@ function afficherStatsVides() {
     document.getElementById('top-produits-list').innerHTML = 
         '<p style="text-align: center; color: #666;">Aucun produit vendu</p>';
 }
-
         function afficherNotification(message, type = 'success') {
             const notif = document.getElementById('notification');
             notif.textContent = message;
@@ -602,6 +621,7 @@ function afficherStatsVides() {
     </script>
 </body>
 </html>
+
 
 
 
