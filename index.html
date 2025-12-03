@@ -170,6 +170,164 @@
     }
 }
 
+/* Styles pour les nouvelles KPI */
+.kpi-section {
+    margin-bottom: 20px;
+    padding: 15px;
+    border-radius: 10px;
+    background: #f8f9fa;
+}
+
+.kpi-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.kpi-value {
+    font-size: 20px;
+    font-weight: bold;
+    color: #4CAF50;
+}
+
+.kpi-subvalue {
+    font-size: 12px;
+    color: #666;
+    margin-top: 3px;
+}
+
+/* Graphique CA amélioré */
+.ca-graph-day {
+    display: flex;
+    align-items: center;
+    margin: 8px 0;
+    padding: 8px;
+    background: #f5f5f5;
+    border-radius: 6px;
+}
+
+.ca-day-label {
+    width: 70px;
+    font-size: 12px;
+    color: #555;
+}
+
+.ca-day-bar {
+    flex: 1;
+    height: 20px;
+    background: #e0e0e0;
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 0 10px;
+    position: relative;
+}
+
+.ca-day-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4CAF50, #8BC34A);
+    border-radius: 4px;
+}
+
+.ca-day-amount {
+    width: 80px;
+    text-align: right;
+    font-size: 12px;
+    font-weight: bold;
+    color: #4CAF50;
+}
+
+/* Badges pour les KPI */
+.kpi-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: bold;
+    margin-left: 8px;
+}
+
+.badge-positive { background: #e8f5e9; color: #4CAF50; }
+.badge-negative { background: #ffebee; color: #f44336; }
+
+/* Modal Statistiques avec scroll */
+#modalStats .modal-content {
+    max-width: 500px;
+    max-height: 85vh !important; /* Limite la hauteur à 85% de l'écran */
+    overflow-y: auto !important; /* Active le scroll vertical */
+    top: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    padding: 20px !important;
+}
+
+/* Header fixe pour le modal stats */
+#modalStats .modal-header {
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 100;
+    padding-bottom: 15px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #eee;
+    margin-top: -20px; /* Compense le padding du modal */
+    padding-top: 20px;
+}
+
+/* Sections avec espacement */
+#modalStats .modal-section {
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #f0f0f0;
+    scroll-margin-top: 80px; /* Pour le scroll vers les sections */
+}
+
+#modalStats .modal-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+/* Pour mobile */
+@media (max-width: 600px) {
+    #modalStats .modal-content {
+        width: 95% !important;
+        max-height: 90vh !important;
+        padding: 15px !important;
+    }
+    
+    #modalStats .modal-header {
+        padding-top: 15px;
+        margin-top: -15px;
+    }
+    
+    #modalStats .modal-section {
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+    }
+}
+
+/* Scrollbar personnalisée */
+#modalStats .modal-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+#modalStats .modal-content::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+#modalStats .modal-content::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 10px;
+}
+
+#modalStats .modal-content::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
     </style>
 </head>
 <body>
@@ -289,40 +447,99 @@
 </div>
 
     <!-- Modal Statistiques -->
-    <div class="modal" id="modalStats">
-        <div class="modal-content">
-            <h3 style="margin-bottom: 20px;">📈 Statistiques</h3>
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-value" id="ca-total">0Ar</div>
-                    <div class="stat-label">Chiffre d'affaires</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="ventes-total">0</div>
-                    <div class="stat-label">Ventes totales</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="top-produit">-</div>
-                    <div class="stat-label">Produit populaire</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="top-client">-</div>
-                    <div class="stat-label">Client fidèle</div>
-                </div>
-            </div>
-            <div style="margin-top: 20px;">
-                <h4>📅 Ventes des 7 derniers jours</h4>
-                <div id="graphique-ventes" style="height: 200px; margin: 15px 0;"></div>
-            </div>
-            <div style="margin-top: 20px;">
-                <h4>🏆 Top 5 produits</h4>
-                <div id="top-produits-list" style="max-height: 200px; overflow-y: auto;"></div>
-            </div>
-            <button class="btn btn-close" onclick="fermerModal('modalStats')" style="margin-top: 20px;">Fermer</button>
+    <!-- Modal Statistiques MIS À JOUR -->
+<div class="modal" id="modalStats">
+    <div class="modal-content" style="max-width: 500px;">
+        <!-- Header -->
+        <div class="modal-header">
+            <h3 style="margin-bottom: 10px;">📈 Tableau de Bord</h3>
+            <button class="btn btn-close" onclick="fermerModal('modalStats')" 
+                    style="position: absolute; top: 15px; right: 15px; padding: 8px 15px;">
+                ❌ Fermer
+            </button>
         </div>
 
+        <!-- Section 1: KPI du jour -->
+        <div class="modal-section">
+            <h4 style="color: #4CAF50; margin-bottom: 15px; text-align: center;">
+                📅 Aujourd'hui - <span id="date-du-jour"></span>
+            </h4>
+            
+            <div class="stats-grid">
+                <!-- CA aujourd'hui -->
+                <div class="stat-card" style="background: #e8f5e9;">
+                    <div class="stat-value" id="ca-aujourdhui">0 Ar</div>
+                    <div class="stat-label">Chiffre d'affaires</div>
+                </div>
+                
+                <!-- Ventes aujourd'hui -->
+                <div class="stat-card" style="background: #e3f2fd;">
+                    <div class="stat-value" id="ventes-aujourdhui">0</div>
+                    <div class="stat-label">Ventes</div>
+                </div>
+                
+                <!-- Bénéfice aujourd'hui -->
+                <div class="stat-card" style="background: #f1f8e9;">
+                    <div class="stat-value" id="benefice-aujourdhui">0 Ar</div>
+                    <div class="stat-label">Bénéfice</div>
+                </div>
+                
+                <!-- Marge aujourd'hui -->
+                <div class="stat-card" style="background: #fff8e1;">
+                    <div class="stat-value" id="marge-aujourdhui">0%</div>
+                    <div class="stat-label">Marge</div>
+                </div>
+            </div>
+        </div>
 
+        <!-- Section 2: KPI du mois -->
+        <div class="modal-section">
+            <h4 style="color: #2196F3; margin-bottom: 15px; text-align: center;">
+                📆 Mois en cours - <span id="mois-courant"></span>
+            </h4>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                <!-- Bénéfice mois -->
+                <div class="stat-card" style="background: #f3e5f5;">
+                    <div class="stat-value" id="benefice-mois">0 Ar</div>
+                    <div class="stat-label">Bénéfice MTD</div>
+                </div>
+                
+                <!-- CA mois -->
+                <div class="stat-card" style="background: #e0f2f1;">
+                    <div class="stat-value" id="ca-mois">0 Ar</div>
+                    <div class="stat-label">CA MTD</div>
+                </div>
+            </div>
+            
+            <!-- Top client mois -->
+            <div style="background: #fff3e0; padding: 12px; border-radius: 8px; margin-bottom: 10px;">
+                <div style="font-size: 12px; color: #666; margin-bottom: 5px;">🏆 Client du mois</div>
+                <div id="top-client-mois" style="font-weight: bold; color: #FF9800;">-</div>
+                <div id="ca-client-mois" style="font-size: 11px; color: #666;">CA: 0 Ar</div>
+            </div>
+        </div>
+
+        <!-- Section 3: Top produits -->
+        <div class="modal-section">
+            <h4 style="color: #9C27B0; margin-bottom: 10px;">🏆 Top 5 produits</h4>
+            <div id="top-produits-list" style="max-height: 180px; overflow-y: auto;">
+                <!-- Liste des top produits -->
+            </div>
+        </div>
+
+        <!-- Section 4: Graphique CA 7 jours -->
+        <div class="modal-section" style="border-bottom: none;">
+            <h4 style="color: #FF5722; margin-bottom: 10px;">📈 CA des 7 derniers jours</h4>
+            <div id="graphique-ca-7jours" style="height: 200px; margin: 10px 0;">
+                <!-- Graphique CA 7 jours -->
+            </div>
+            <div style="text-align: center; margin-top: 5px;">
+                <small style="color: #4CAF50; font-weight: bold;" id="total-semaine-ca">Total: 0 Ar</small>
+            </div>
+        </div>
     </div>
+</div>
 
     <script>
         // 🔥 CONFIGURATION SUPABASE - À MODIFIER
@@ -738,187 +955,319 @@ function rechercherProduit() {
         // FONCTIONS STATISTIQUES (NOUVELLES)
         // ============================================
         
-        async function chargerStats() {
-            try {
-                console.log('📈 Chargement des statistiques...');
-                
-                // 1. Charger les ventes
-                const responseVentes = await fetch(`${SUPABASE_URL}/rest/v1/ventes?select=client,produit,quantite,date_vente&order=date_vente.desc`, { 
-                    headers: headers 
-                });
-                
-                if (!responseVentes.ok) {
-                    throw new Error(`Erreur ventes: ${responseVentes.status}`);
-                }
-                
-                const ventes = await responseVentes.json();
-                
-                // 2. Charger les produits pour les prix
-                const responseProduits = await fetch(`${SUPABASE_URL}/rest/v1/produits?select=nom,prix`, { 
-                    headers: headers 
-                });
-                const produits = await responseProduits.json();
-                
-                // 3. Calculer les statistiques
-                calculerStatsNouveau(ventes, produits);
-                
-            } catch (error) {
-                console.error('❌ Erreur chargement stats:', error);
-                afficherNotification('Erreur: ' + error.message, 'error');
-            }
+       // ============================================
+// FONCTIONS STATISTIQUES MISES À JOUR
+// ============================================
+
+// Fonction principale pour charger les stats
+async function chargerStats() {
+    try {
+        console.log('📈 Chargement des statistiques complètes...');
+        
+        // Afficher la date du jour et du mois
+        afficherDates();
+        
+        // 1. Charger les produits (avec coûts)
+        const responseProduits = await fetch(`${SUPABASE_URL}/rest/v1/produits?select=id,nom,prix,cout`, { 
+            headers: headers 
+        });
+        const produits = await responseProduits.json();
+        
+        // 2. Charger toutes les ventes
+        const responseVentes = await fetch(`${SUPABASE_URL}/rest/v1/ventes?select=id,client,produit,quantite,date_vente&order=date_vente.desc`, { 
+            headers: headers 
+        });
+        const ventes = await responseVentes.json();
+        
+        // 3. Calculer toutes les statistiques
+        calculerStatsCompletes(ventes, produits);
+        
+    } catch (error) {
+        console.error('❌ Erreur chargement stats:', error);
+        afficherNotification('Erreur: ' + error.message, 'error');
+    }
+}
+
+// Afficher les dates
+function afficherDates() {
+    const now = new Date();
+    
+    // Date du jour
+    const dateJour = now.toLocaleDateString('fr-FR', { 
+        weekday: 'long', 
+        day: 'numeric', 
+        month: 'long' 
+    });
+    document.getElementById('date-du-jour').textContent = dateJour;
+    
+    // Mois courant
+    const moisCourant = now.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+    document.getElementById('mois-courant').textContent = moisCourant;
+}
+
+// Calculer toutes les statistiques
+function calculerStatsCompletes(ventes, produits) {
+    if (ventes.length === 0) {
+        afficherStatsVides();
+        return;
+    }
+
+    // Créer un map des produits avec prix et coût
+    const produitsMap = {};
+    produits.forEach(prod => {
+        produitsMap[prod.nom] = {
+            prix: prod.prix || 0,
+            cout: prod.cout || 0,
+            marge: (prod.prix || 0) - (prod.cout || 0)
+        };
+    });
+
+    const maintenant = new Date();
+    const aujourdhuiStr = maintenant.toISOString().split('T')[0];
+    const moisCourant = maintenant.getMonth();
+    const anneeCourante = maintenant.getFullYear();
+
+    // Initialiser les accumulators
+    let caAujourdhui = 0;
+    let beneficeAujourdhui = 0;
+    let ventesAujourdhui = 0;
+    
+    let caMois = 0;
+    let beneficeMois = 0;
+    
+    const ventesParProduit = {};
+    const caParClient = {};
+    const caParJour = {};
+    
+    // Initialiser les 7 derniers jours
+    for (let i = 6; i >= 0; i--) {
+        const date = new Date(maintenant);
+        date.setDate(date.getDate() - i);
+        const dateStr = date.toISOString().split('T')[0];
+        caParJour[dateStr] = 0;
+    }
+
+    // Parcourir toutes les ventes
+    ventes.forEach(vente => {
+        const dateVente = new Date(vente.date_vente);
+        const dateStr = dateVente.toISOString().split('T')[0];
+        
+        // Données du produit
+        const produit = produitsMap[vente.produit] || { prix: 0, cout: 0, marge: 0 };
+        const caVente = produit.prix * vente.quantite;
+        const beneficeVente = produit.marge * vente.quantite;
+        
+        // Statistiques du jour
+        if (dateStr === aujourdhuiStr) {
+            caAujourdhui += caVente;
+            beneficeAujourdhui += beneficeVente;
+            ventesAujourdhui++;
         }
-
-        function calculerStatsNouveau(ventes, produits) {
-            if (ventes.length === 0) {
-                afficherStatsVides();
-                return;
-            }
-
-            // Map des prix
-            const prixProduits = {};
-            produits.forEach(prod => {
-                prixProduits[prod.nom] = prod.prix || 0;
-            });
-
-            // CA total
-            const caTotal = ventes.reduce((total, vente) => {
-                const prix = prixProduits[vente.produit] || 0;
-                return total + (prix * vente.quantite);
-            }, 0);
-
-            // Ventes totales
-            const totalVentes = ventes.length;
-
-            // Produit le plus vendu
-            const produitsCount = {};
-            ventes.forEach(vente => {
-                produitsCount[vente.produit] = (produitsCount[vente.produit] || 0) + vente.quantite;
-            });
-            const topProduit = Object.entries(produitsCount).sort((a, b) => b[1] - a[1])[0];
-
-            // Client le plus fidèle
-            const clientsCount = {};
-            ventes.forEach(vente => {
-                clientsCount[vente.client] = (clientsCount[vente.client] || 0) + 1;
-            });
-            const topClient = Object.entries(clientsCount).sort((a, b) => b[1] - a[1])[0];
-
-            // Ventes par jour
-            const ventesParJour = calculerVentesParJour(ventes);
-
-            // Top produits
-            const topProduitsAvecCA = Object.entries(produitsCount)
-                .map(([nom, quantite]) => ({
-                    nom,
-                    quantite,
-                    ca: (prixProduits[nom] || 0) * quantite
-                }))
-                .sort((a, b) => b.quantite - a.quantite)
-                .slice(0, 5);
-
-            // Afficher
-            afficherStatsComplet({
-                caTotal,
-                totalVentes,
-                topProduit: topProduit ? `${topProduit[0]} (${topProduit[1]}x)` : '-',
-                topClient: topClient ? `${topClient[0]} (${topClient[1]} achats)` : '-',
-                ventesParJour,
-                topProduits: topProduitsAvecCA
-            });
+        
+        // Statistiques du mois
+        if (dateVente.getMonth() === moisCourant && dateVente.getFullYear() === anneeCourante) {
+            caMois += caVente;
+            beneficeMois += beneficeVente;
+            
+            // CA par client (mois)
+            caParClient[vente.client] = (caParClient[vente.client] || 0) + caVente;
         }
+        
+        // CA par jour (7 derniers jours)
+        if (caParJour[dateStr] !== undefined) {
+            caParJour[dateStr] += caVente;
+        }
+        
+        // Ventes par produit
+        ventesParProduit[vente.produit] = (ventesParProduit[vente.produit] || 0) + vente.quantite;
+    });
 
-        function calculerVentesParJour(ventes) {
-            const jours = {};
-            const aujourdHui = new Date();
-            
-            for (let i = 6; i >= 0; i--) {
-                const date = new Date(aujourdHui);
-                date.setDate(date.getDate() - i);
-                const dateStr = date.toISOString().split('T')[0];
-                jours[dateStr] = 0;
-            }
+    // Calculer les marges
+    const margeAujourdhui = caAujourdhui > 0 ? (beneficeAujourdhui / caAujourdhui * 100) : 0;
+    
+    // Trouver le client top du mois
+    let topClientMois = '-';
+    let caTopClient = 0;
+    if (Object.keys(caParClient).length > 0) {
+        const entries = Object.entries(caParClient);
+        entries.sort((a, b) => b[1] - a[1]);
+        topClientMois = entries[0][0];
+        caTopClient = entries[0][1];
+    }
+    
+    // Top 5 produits (quantités)
+    const topProduits = Object.entries(ventesParProduit)
+        .map(([nom, quantite]) => ({
+            nom,
+            quantite,
+            ca: (produitsMap[nom]?.prix || 0) * quantite,
+            benefice: (produitsMap[nom]?.marge || 0) * quantite
+        }))
+        .sort((a, b) => b.quantite - a.quantite)
+        .slice(0, 5);
+    
+    // Produit populaire (top vente)
+    const produitPopulaire = topProduits.length > 0 ? topProduits[0] : null;
+    
+    // Afficher toutes les statistiques
+    afficherStatsCompletes({
+        // KPI du jour
+        caAujourdhui,
+        ventesAujourdhui,
+        beneficeAujourdhui,
+        margeAujourdhui,
+        
+        // KPI du mois
+        caMois,
+        beneficeMois,
+        topClientMois,
+        caTopClient,
+        
+        // Top produits
+        produitPopulaire,
+        topProduits,
+        
+        // Graphique CA 7 jours
+        caParJour,
+        totalSemaine: Object.values(caParJour).reduce((a, b) => a + b, 0)
+    });
+}
 
-            ventes.forEach(vente => {
-                const dateVente = new Date(vente.date_vente).toISOString().split('T')[0];
-                if (jours[dateVente] !== undefined) {
-                    jours[dateVente] += vente.quantite;
-                }
+// Afficher toutes les statistiques
+function afficherStatsCompletes(stats) {
+    // Formateur de montant en Ariary
+    function formaterMontant(montant) {
+        return new Intl.NumberFormat('fr-FR').format(Math.round(montant)) + ' Ar';
+    }
+    
+    function formaterPourcentage(pourcentage) {
+        return pourcentage.toFixed(1) + '%';
+    }
+
+    // KPI du jour
+    document.getElementById('ca-aujourdhui').textContent = formaterMontant(stats.caAujourdhui);
+    document.getElementById('ventes-aujourdhui').textContent = stats.ventesAujourdhui;
+    document.getElementById('benefice-aujourdhui').textContent = formaterMontant(stats.beneficeAujourdhui);
+    document.getElementById('marge-aujourdhui').textContent = formaterPourcentage(stats.margeAujourdhui);
+    
+    // Ajouter un badge pour la marge
+    const margeElement = document.getElementById('marge-aujourdhui');
+    margeElement.innerHTML = formaterPourcentage(stats.margeAujourdhui) + 
+        `<span class="kpi-badge ${stats.margeAujourdhui >= 30 ? 'badge-positive' : 'badge-negative'}">
+            ${stats.margeAujourdhui >= 30 ? 'Bonne' : 'À améliorer'}
+        </span>`;
+    
+    // KPI du mois
+    document.getElementById('ca-mois').textContent = formaterMontant(stats.caMois);
+    document.getElementById('benefice-mois').textContent = formaterMontant(stats.beneficeMois);
+    
+    // Top client du mois
+    document.getElementById('top-client-mois').textContent = stats.topClientMois;
+    document.getElementById('ca-client-mois').textContent = `CA: ${formaterMontant(stats.caTopClient)}`;
+    
+    // Top 5 produits
+    afficherTopProduits(stats.topProduits);
+    
+    // Graphique CA 7 jours
+    afficherGraphiqueCA7Jours(stats.caParJour, stats.totalSemaine);
+    
+    // Produit populaire dans le titre si tu veux l'afficher ailleurs
+    if (stats.produitPopulaire) {
+        console.log('🏆 Produit populaire:', stats.produitPopulaire.nom, 
+                   stats.produitPopulaire.quantite, 'ventes');
+    }
+}
+
+// Afficher le graphique CA 7 jours
+function afficherGraphiqueCA7Jours(caParJour, totalSemaine) {
+    const container = document.getElementById('graphique-ca-7jours');
+    
+    // Trouver le CA maximum pour l'échelle
+    const valeursCA = Object.values(caParJour);
+    const maxCA = Math.max(...valeursCA);
+    
+    container.innerHTML = Object.entries(caParJour)
+        .map(([date, ca]) => {
+            const pourcentage = maxCA > 0 ? (ca / maxCA) * 100 : 0;
+            const dateFormatee = new Date(date).toLocaleDateString('fr-FR', { 
+                weekday: 'short', 
+                day: 'numeric' 
             });
-
-            return jours;
-        }
-
-        function afficherStatsComplet(stats) {
-            document.getElementById('ca-total').textContent = `${stats.caTotal.toFixed(2)}Ar`;
-            document.getElementById('ventes-total').textContent = stats.totalVentes;
-            document.getElementById('top-produit').textContent = stats.topProduit;
-            document.getElementById('top-client').textContent = stats.topClient;
             
-            afficherGraphiqueVentes(stats.ventesParJour);
-            afficherTopProduits(stats.topProduits);
-        }
-
-        function afficherGraphiqueVentes(ventesParJour) {
-            const container = document.getElementById('graphique-ventes');
-            const maxVentes = Math.max(...Object.values(ventesParJour));
-            
-            container.innerHTML = Object.entries(ventesParJour)
-                .map(([date, quantite]) => {
-                    const pourcentage = maxVentes > 0 ? (quantite / maxVentes) * 100 : 0;
-                    const dateFormatee = new Date(date).toLocaleDateString('fr-FR', { 
-                        weekday: 'short', 
-                        day: 'numeric' 
-                    });
-                    
-                    return `
-                        <div class="graph-bar">
-                            <div class="graph-bar-label">${dateFormatee}</div>
-                            <div class="graph-bar-container">
-                                <div class="graph-bar-fill" style="width: ${pourcentage}%"></div>
-                            </div>
-                            <div class="graph-bar-value">${quantite}</div>
-                        </div>
-                    `;
-                })
-                .join('');
-        }
-
-        function afficherTopProduits(topProduits) {
-            const container = document.getElementById('top-produits-list');
-            
-            if (topProduits.length === 0) {
-                container.innerHTML = '<p style="text-align: center; color: #666;">Aucune donnée</p>';
-                return;
-            }
-            
-            container.innerHTML = topProduits
-                .map((produit, index) => `
-                    <div style="padding: 8px; border-bottom: 1px solid #eee;">
-                        <div style="display: flex; justify-content: space-between;">
-                            <span><strong>${index + 1}. ${produit.nom}</strong></span>
-                            <span style="color: #4CAF50; font-weight: bold;">${produit.quantite}</span>
-                        </div>
-                        <div style="font-size: 12px; color: #666; text-align: right;">
-                            CA: ${produit.ca.toFixed(2)}Ar
-                        </div>
+            return `
+                <div class="ca-graph-day">
+                    <div class="ca-day-label">${dateFormatee}</div>
+                    <div class="ca-day-bar">
+                        <div class="ca-day-fill" style="width: ${pourcentage}%"></div>
                     </div>
-                `)
-                .join('');
-        }
+                    <div class="ca-day-amount">${new Intl.NumberFormat('fr-FR').format(Math.round(ca))} Ar</div>
+                </div>
+            `;
+        })
+        .join('');
+    
+    // Total de la semaine
+    document.getElementById('total-semaine-ca').textContent = 
+        `Total semaine: ${new Intl.NumberFormat('fr-FR').format(Math.round(totalSemaine))} Ar`;
+}
 
-        function afficherStatsVides() {
-            document.getElementById('ca-total').textContent = '0Ar';
-            document.getElementById('ventes-total').textContent = '0';
-            document.getElementById('top-produit').textContent = '-';
-            document.getElementById('top-client').textContent = '-';
+// Afficher le top des produits
+function afficherTopProduits(topProduits) {
+    const container = document.getElementById('top-produits-list');
+    
+    if (topProduits.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">Aucune donnée</p>';
+        return;
+    }
+    
+    container.innerHTML = topProduits
+        .map((produit, index) => {
+            const margeUnitaire = produit.benefice / produit.quantite;
+            const margePourcentage = produit.ca > 0 ? (produit.benefice / produit.ca * 100) : 0;
             
-            document.getElementById('graphique-ventes').innerHTML = 
-                '<p style="text-align: center; color: #666;">Aucune vente cette semaine</p>';
-            
-            document.getElementById('top-produits-list').innerHTML = 
-                '<p style="text-align: center; color: #666;">Aucun produit vendu</p>';
-        }
+            return `
+                <div style="padding: 10px; border-bottom: 1px solid #eee; background: ${index === 0 ? '#fff8e1' : 'white'};">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                        <div>
+                            <span style="font-weight: bold; color: #333;">${index + 1}. ${produit.nom}</span>
+                            ${index === 0 ? '<span style="font-size: 10px; background: #FF9800; color: white; padding: 2px 6px; border-radius: 10px; margin-left: 8px;">TOP</span>' : ''}
+                        </div>
+                        <span style="color: #4CAF50; font-weight: bold;">${produit.quantite} ventes</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 11px; color: #666;">
+                        <span>CA: ${new Intl.NumberFormat('fr-FR').format(Math.round(produit.ca))} Ar</span>
+                        <span>Bénéfice: ${new Intl.NumberFormat('fr-FR').format(Math.round(produit.benefice))} Ar</span>
+                        <span>Marge: ${margePourcentage.toFixed(1)}%</span>
+                    </div>
+                </div>
+            `;
+        })
+        .join('');
+}
 
+// Afficher des stats vides
+function afficherStatsVides() {
+    const elements = [
+        'ca-aujourdhui', 'ventes-aujourdhui', 'benefice-aujourdhui', 'marge-aujourdhui',
+        'ca-mois', 'benefice-mois', 'top-client-mois', 'ca-client-mois'
+    ];
+    
+    elements.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            if (id.includes('marge')) element.textContent = '0%';
+            else if (id.includes('ventes')) element.textContent = '0';
+            else if (id.includes('client')) element.textContent = '-';
+            else element.textContent = '0 Ar';
+        }
+    });
+    
+    document.getElementById('graphique-ca-7jours').innerHTML = 
+        '<p style="text-align: center; color: #666; padding: 40px 0;">Aucune vente cette semaine</p>';
+    
+    document.getElementById('top-produits-list').innerHTML = 
+        '<p style="text-align: center; color: #666; padding: 20px;">Aucun produit vendu</p>';
+}
         // ============================================
         // FONCTIONS UTILITAIRES
         // ============================================
